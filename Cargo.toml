@@ -7,6 +7,7 @@ description = "A simple i18n library for rust"
 readme = "./README.md"
 repository = "https://github.com/LyunKi/intl-rs"
 license = "MIT"
+license-file = "./LICENSE"
 keywords = ["i18n","intl","internationalization","localization"]
 categories =["Localization (L10n)","Internationalization (i18n)","Web programming"]
 
