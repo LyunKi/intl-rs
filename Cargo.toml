@@ -1,9 +1,17 @@
 [package]
 name = "intl-rs"
-version = "0.1.0"
-authors = ["longyun <ly1169134156@163.com>"]
+version = "1.0.0"
+authors = ["LyunKi <ly1169134156@163.com>"]
 edition = "2018"
+description = "A simple i18n library for rust"
+readme = "./README.md"
+repository = "https://github.com/LyunKi/intl-rs"
+license = "MIT"
+keywords = ["i18n","intl","internationalization","localization"]
+categories =["Localization (L10n)","Internationalization (i18n)","Web programming"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+serde_json = "1.0.51"
+lazy_static = "1.4.0"
