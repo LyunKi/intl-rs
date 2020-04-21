@@ -2,11 +2,12 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
 
-#[derive(Clone, Debug)]
-pub struct I18nConfig {
+#[derive(Clone, Debug, Default)]
+pub struct I18nConfig<'a> {
     pub locale: Option<String>,
     pub fallback: Option<bool>,
     pub null_placeholder: Option<String>,
+    pub args: Option<HashMap<&'a str, &'a str>>,
 }
 
 #[derive(Clone, Debug)]
