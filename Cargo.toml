@@ -1,6 +1,6 @@
 [package]
 name = "intl-rs"
-version = "1.1.0"
+version = "1.2.0"
 authors = ["LyunKi <ly1169134156@163.com>"]
 edition = "2018"
 description = "A simple i18n library for rust"
@@ -16,3 +16,4 @@ categories =["localization","internationalization","web-programming"]
 serde_json = "1.0.51"
 lazy_static = "1.4.0"
 string_template = "0.2.1"
+Inflector = "0.11.4"

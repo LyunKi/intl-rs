@@ -1,3 +1,4 @@
+use inflector::Inflector;
 use lazy_static::lazy_static;
 use serde_json::Value;
 use std::env;
@@ -26,25 +27,36 @@ lazy_static! {
 pub fn find_optimal_locale<S: Into<String>>(locale: S, fallback: bool) -> Option<String> {
     let borrow = I18N.read().unwrap();
     let locale = locale.into();
-    if borrow.inner.contains_key(&locale) {
-        Some(locale)
-    } else if !fallback {
+    if !fallback && !borrow.inner.contains_key(&locale) {
         None
     } else {
+        let mut common_result: Option<String> = None;
+        let mut similar_result: Option<String> = None;
+        let snake_locale = locale.as_str().to_snake_case();
         let locale_scope = locale.split(|c| c == '_' || c == '-').collect::<Vec<_>>()[0];
-        let locales: Vec<String> = borrow
-            .inner
-            .iter()
-            .filter_map(|(key, _)| {
-                let scope = key.split(|c| c == '_' || c == '-').collect::<Vec<_>>()[0];
-                if scope == locale_scope {
-                    Some(key.to_owned())
-                } else {
-                    None
-                }
-            })
-            .collect();
-        locales.first().cloned()
+        for (key, _) in borrow.inner.iter() {
+            let snake_key = key.as_str().to_snake_case();
+            //en_US.json en-US.json completely match en_US.json when fallback flag is true;
+            if snake_key == snake_locale {
+                return Some(key.to_owned());
+            }
+            let key_infos = key.split(|c| c == '_' || c == '-').collect::<Vec<_>>();
+            let scope = key_infos[0];
+            if scope != locale_scope {
+                continue;
+            }
+            // en.json is the common match of en_US.json,en_US.json is the similar match of en_UK.json
+            if key_infos.len() == 1 {
+                common_result = Some(key.to_owned());
+            } else {
+                similar_result = Some(key.to_owned());
+            }
+        }
+        if common_result.is_some() {
+            common_result
+        } else {
+            similar_result
+        }
     }
 }
 
@@ -160,9 +172,16 @@ mod tests {
     #[test]
     fn i18n_can_find_optimal_locale() {
         env::set_var("INTL_RS_DIR", "languages");
-        let key = "en_UK";
-        assert_eq!(find_optimal_locale(key, true), Some("en_US".to_owned()));
-        assert_eq!(find_optimal_locale(key, false), None);
+        assert_eq!(find_optimal_locale("en_UK", true), Some("en".to_owned()));
+
+        assert_eq!(find_optimal_locale("en-US", true), Some("en_US".to_owned()));
+
+        assert_eq!(
+            find_optimal_locale("en_US", false),
+            Some("en_US".to_owned())
+        );
+
+        assert_eq!(find_optimal_locale("en_UK", false), None);
     }
 
     #[test]

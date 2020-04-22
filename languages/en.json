@@ -1,0 +1,6 @@
+{
+    "hello": {
+        "world": "Hello,World!",
+        "somebody": "Hello,{{name}}!"
+    }
+}
