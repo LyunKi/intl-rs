@@ -55,7 +55,10 @@ pub fn find_optimal_locale<S: Into<String>>(locale: S, fallback: bool) -> Option
         if common_result.is_some() {
             common_result
         } else {
-            similar_result
+            if similar_result.is_some() { similar_result }
+            else {
+                if fallback { Some(borrow.default_locale.clone()) } else { None }
+            }
         }
     }
 }
@@ -182,6 +185,13 @@ mod tests {
         );
 
         assert_eq!(find_optimal_locale("en_UK", false), None);
+    }
+
+    #[test]
+    fn fallback_to_default_locale() {
+        env::set_var("INTL_RS_DIR", "languages");
+        // locale fr_FR is not exists, default should be used on fallback
+        assert_eq!(find_optimal_locale("fr_FR", true), Some("zh_CN".to_owned()));
     }
 
     #[test]
