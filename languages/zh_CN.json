@@ -1,6 +1,7 @@
 {
     "hello": {
         "world": "你好，世界！",
-        "somebody": "你好，{{name}}！"
+        "somebody": "你好，{{name}}！",
+        "this_locale_only": "仅存在于 zh_CN"
     }
 }

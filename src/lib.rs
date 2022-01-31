@@ -91,20 +91,34 @@ pub fn format_message<'a, S: Into<String>, D: Into<String>>(
         None => default_message,
         Some(locale_key) => {
             let configs: &Value = &borrow.inner[&locale_key];
-            match key
-                .split('.')
-                .fold(configs, |result: &Value, k| &result[&k])
-            {
-                Value::Null => default_message,
-                other => other
-                    .as_str()
-                    .map(|other_str| other_str.to_string())
-                    .unwrap_or(other.to_string()),
-            }
+            get_value(configs, locale_key, key, default_message)
         }
     };
     let template = Template::new(&template_string);
     template.render(&args.unwrap_or_default())
+}
+
+fn get_value<'a>(
+configs: &Value, locale_key: String, key: String, default_message: String) -> String {
+    let borrow = I18N.read().unwrap();
+    match key
+        .split('.')
+        .fold(configs, |result: &Value, k| &result[&k])
+    {
+        Value::Null => if locale_key == borrow.default_locale { default_message }
+                       else if borrow.fallback {
+                           get_value(
+                               &borrow.inner[&borrow.default_locale],
+                               borrow.default_locale.clone(),
+                               key,
+                               default_message
+                            )
+                        } else { default_message },
+        other => other
+            .as_str()
+            .map(|other_str| other_str.to_string())
+            .unwrap_or(other.to_string()),
+    }
 }
 
 ///disable the global fallback config
@@ -246,6 +260,21 @@ mod tests {
         assert_eq!(
             t!("hello.somebody", args: args.clone()),
             "你好，唐纳德·川普！"
+        );
+    }
+
+    #[test]
+    fn fallback_to_default_locale_property() {
+        env::set_var("INTL_RS_DIR", "languages");
+        let configs = I18nConfig {
+            fallback: Some(true),
+            locale: Some("en_US".to_owned()),
+            null_placeholder: Some("".to_owned()),
+            args: None,
+        };
+        assert_eq!(
+            t!("hello.this_locale_only", configs: configs),
+            "仅存在于 zh_CN"
         );
     }
 }
