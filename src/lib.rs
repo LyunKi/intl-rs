@@ -2,7 +2,7 @@ use inflector::Inflector;
 use lazy_static::lazy_static;
 use serde_json::Value;
 use std::env;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use string_template::Template;
 use structs::I18n;
 
@@ -10,23 +10,23 @@ pub use structs::I18nConfig;
 
 mod structs;
 
-static DIR_KEY: &'static str = "INTL_RS_DIR";
+static RESOURCES_KEY: &'static str = "INTL_RS_RESOURCES";
 
-static DEFAULT_LANG_KEY: &'static str = "INTL_RS_LANG";
+static CONFIG_KEY: &'static str = "INTL_RS_CONFIG";
 
 lazy_static! {
-    pub static ref I18N: Arc<RwLock<I18n>> = {
-        let dir = env::var(DIR_KEY).unwrap_or("src/languages".to_owned());
-        let lang = env::var(DEFAULT_LANG_KEY).unwrap_or("zh_CN".to_owned());
-        let inner = I18n::init(dir, lang);
-        Arc::new(RwLock::new(inner))
+    pub static ref I18N: Arc<I18n> = {
+        let resources_path = env::var(RESOURCES_KEY).unwrap_or("i18n".to_owned());
+        let config_path = env::var(CONFIG_KEY).unwrap_or("i18n.toml".to_owned());
+        let inner = I18n::init(resources_path, config_path);
+        Arc::new(inner)
     };
 }
 
 ///find the optimal locale
-pub fn find_optimal_locale<S: Into<String>>(locale: S, fallback: bool) -> Option<String> {
+pub fn find_optimal_locale<S: Into<String>>(accept_langauge: S, fallback: bool) -> Option<String> {
     let borrow = I18N.read().unwrap();
-    let locale = locale.into();
+    let locale = accept_langauge.into();
     if !fallback && !borrow.inner.contains_key(&locale) {
         None
     } else {
@@ -70,18 +70,12 @@ pub fn format_message<'a, S: Into<String>, D: Into<String>>(
     let key = key.into();
     let borrow = I18N.read().unwrap();
     let I18nConfig {
-        locale,
+        language: locale,
         fallback,
         null_placeholder,
         args,
     } = options.unwrap_or_default();
-    let locale = locale.unwrap_or({
-        borrow
-            .current_locale
-            .as_ref()
-            .unwrap_or(&borrow.default_locale)
-            .to_owned()
-    });
+    let locale = locale.unwrap_or(borrow.default_locale.clone());
     let fallback = fallback.unwrap_or(borrow.fallback);
     let fallback_message = null_placeholder.unwrap_or(borrow.null_placeholder.to_owned());
     let default_message = default_message
@@ -105,26 +99,6 @@ pub fn format_message<'a, S: Into<String>, D: Into<String>>(
     };
     let template = Template::new(&template_string);
     template.render(&args.unwrap_or_default())
-}
-
-///disable the global fallback config
-pub fn disable_fallback() {
-    I18N.write().unwrap().fallback = false;
-}
-
-///enable the global fallback config
-pub fn enable_fallback() {
-    I18N.write().unwrap().fallback = true;
-}
-
-///set the current locale config
-pub fn set_current_locale<S: Into<String>>(current_locale: S) {
-    I18N.write().unwrap().current_locale = Some(current_locale.into());
-}
-
-///set the null placeholder config
-pub fn set_null_placeholder<S: Into<String>>(null_placeholder: S) {
-    I18N.write().unwrap().null_placeholder = null_placeholder.into();
 }
 
 #[macro_export]
@@ -163,89 +137,4 @@ macro_rules! t {
     ($key:expr,$default_message:expr,$configs:expr) => {
         $crate::format_message($key, Some($default_message), $configs)
     };
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::collections::HashMap;
-    #[test]
-    fn i18n_can_find_optimal_locale() {
-        env::set_var("INTL_RS_DIR", "languages");
-        assert_eq!(find_optimal_locale("en_UK", true), Some("en".to_owned()));
-
-        assert_eq!(find_optimal_locale("en-US", true), Some("en_US".to_owned()));
-
-        assert_eq!(
-            find_optimal_locale("en_US", false),
-            Some("en_US".to_owned())
-        );
-
-        assert_eq!(find_optimal_locale("en_UK", false), None);
-    }
-
-    #[test]
-    fn i18n_can_format_messages() {
-        env::set_var("INTL_RS_DIR", "languages");
-        let key = "hello.world";
-        assert_eq!(t!(key), "你好，世界！");
-
-        assert_eq!(
-            t!("unknown key", default:"default message"),
-            "default message"
-        );
-
-        //default to ensure fallback
-        //and you can disable it by disable_fallback function
-        let configs = I18nConfig {
-            fallback: None,
-            locale: Some("en".to_owned()),
-            null_placeholder: None,
-            args: None,
-        };
-        assert_eq!(t!(key, configs: configs), "Hello,World!");
-
-        let configs = I18nConfig {
-            fallback: Some(true),
-            locale: Some("en_UK".to_owned()),
-            null_placeholder: None,
-            args: None,
-        };
-        assert_eq!(t!(key, configs: configs), "Hello,World!");
-
-        //change the default null placeholder
-        let configs = I18nConfig {
-            fallback: Some(true),
-            locale: Some("en_UK".to_owned()),
-            null_placeholder: Some("".to_owned()),
-            args: None,
-        };
-        assert_eq!(t!("unknown key", configs: configs), "");
-        //render template
-        let mut args: HashMap<&str, &str> = HashMap::new();
-        args.insert("name", "Donald Trump");
-
-        let configs = I18nConfig {
-            fallback: Some(true),
-            locale: Some("en_UK".to_owned()),
-            null_placeholder: Some("".to_owned()),
-            args: Some(args.clone()),
-        };
-        assert_eq!(
-            t!("hello.somebody", configs: configs),
-            "Hello,Donald Trump!"
-        );
-
-        assert_eq!(
-            t!("unknown key",default:"Hey,{{name}}!", args: args.clone()),
-            "Hey,Donald Trump!"
-        );
-
-        let mut args: HashMap<&str, &str> = HashMap::new();
-        args.insert("name", "唐纳德·川普");
-        assert_eq!(
-            t!("hello.somebody", args: args.clone()),
-            "你好，唐纳德·川普！"
-        );
-    }
 }

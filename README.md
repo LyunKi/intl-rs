@@ -4,9 +4,9 @@ A simple i18n library for rust
 
 ### Configs
 
-1. The default language files is under`src/languages`,and you could change it by the env var `INTL_RS_DIR`
+1. The default language files is under`src/languages`,and you could change it by the env var `INTL_RS_RESOURCES`
 2. The default locale(default_locale property) is `zh_CN`,
-   and you could change it by the env var `INTL_RS_LANG`
+   and you could change it by the env var `INTL_RS_DEFAULT_LANG`
 
 ### Config File
 
@@ -14,10 +14,10 @@ Just support the json file for example `en_US.json` like below
 
 ```json
 {
-    "hello": {
-        "world": "Hello,World!",
-        "somebody": "Hello,{{name}}!"
-    }
+  "hello": {
+    "world": "Hello,World!",
+    "somebody": "Hello,{{name}}!"
+  }
 }
 ```
 
@@ -25,7 +25,7 @@ Just support the json file for example `en_US.json` like below
 
 ```rust
     fn i18n_can_format_messages() {
-        env::set_var("INTL_RS_DIR", "languages");
+        env::set_var("INTL_RS_RESOURCES", "languages");
         let key = "hello.world";
         assert_eq!(t!(key), "你好，世界！");
 

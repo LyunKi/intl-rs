@@ -4,8 +4,8 @@
 
 ### 配置
 
-1. 默认配置文件放在`src/languages` 下，可以通过环境变量`INTL_RS_DIR`修改
-2. 默认的 locale(default_locale 属性) 是`zh_CN`，可以通过环境变量`INTL_RS_LANG`修改
+1. 默认配置文件放在`src/languages` 下，可以通过环境变量`INTL_RS_RESOURCES`修改
+2. 默认的 locale(default_locale 属性) 是`zh_CN`，可以通过环境变量`INTL_RS_DEFAULT_LANG`修改
 
 ### 配置文件
 
@@ -13,10 +13,10 @@
 
 ```json
 {
-    "hello": {
-        "world": "Hello,World!",
-        "somebody": "Hello,{{name}}!"
-    }
+  "hello": {
+    "world": "Hello,World!",
+    "somebody": "Hello,{{name}}!"
+  }
 }
 ```
 
@@ -24,7 +24,7 @@
 
 ```rust
     fn i18n_can_format_messages() {
-        env::set_var("INTL_RS_DIR", "languages");
+        env::set_var("INTL_RS_RESOURCES", "languages");
         let key = "hello.world";
         assert_eq!(t!(key), "你好，世界！");
 
