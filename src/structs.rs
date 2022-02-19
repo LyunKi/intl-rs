@@ -3,10 +3,9 @@ use std::collections::HashMap;
 use std::fs;
 
 #[derive(Clone, Debug, Default)]
-pub struct I18nConfig<'a> {
-    pub language: Option<String>,
-    pub default_message: Option<String>,
-    pub null_placeholder: Option<String>,
+pub struct TranslationConfig<'a> {
+    pub accept_language: Option<&'a str>,
+    pub default_message: Option<&'a str>,
     pub args: Option<HashMap<&'a str, &'a str>>,
 }
 
@@ -14,13 +13,12 @@ pub struct I18nConfig<'a> {
 pub struct I18n {
     pub supported_languages: Vec<String>,
     pub inner: HashMap<String, Value>,
-    pub default_language: Option<String>,
-    pub null_placeholder: Option<String>,
+    pub default_language: String,
 }
 
 impl I18n {
     ///init the I18n singleton
-    pub fn init(resources_path: String, config_path: String) -> Self {
+    pub fn init(resources_path: String, default_language: String) -> Self {
         let read_dir =
             fs::read_dir(&resources_path).expect("Fail to initialize with current directory");
         let supported_languages: Vec<String> = read_dir
@@ -53,7 +51,6 @@ impl I18n {
             supported_languages,
             inner,
             default_language,
-            null_placeholder,
         }
     }
 }

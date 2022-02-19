@@ -1,0 +1,6 @@
+{
+  "hello": {
+    "world": "你好，世界！",
+    "somebody": "你好，{{name}}！"
+  }
+}
