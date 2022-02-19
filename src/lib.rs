@@ -24,14 +24,14 @@ lazy_static! {
 
 pub fn format_message<'a, S: Into<String>>(
     key: S,
-    options: Option<TranslationConfig<'a>>,
+    config: Option<TranslationConfig<'a>>,
 ) -> String {
     let key = key.into();
     let TranslationConfig {
         accept_language,
         default_message,
         args,
-    } = options.unwrap_or_default();
+    } = config.unwrap_or_default();
     let common_languages = accept_language::intersection(
         &accept_language.unwrap_or(&I18N.default_language),
         I18N.supported_languages.iter().map(|s| s as &str).collect(),
@@ -77,7 +77,7 @@ macro_rules! t {
             }),
         )
     };
-    ($key:expr,configs:$configs:expr) => {
-        $crate::format_message($key, Some($configs))
+    ($key:expr,config:$config:expr) => {
+        $crate::format_message($key, Some($config))
     };
 }
