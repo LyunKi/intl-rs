@@ -58,20 +58,20 @@ macro_rules! t {
     ($key:expr) => {
         $crate::format_message($key, None)
     };
-    ($key:expr,accept_langauge:$accept_langauge:expr) => {
+    ($key:expr,accept_language:$accept_language:expr) => {
         $crate::format_message(
             $key,
-            Some(TranslationConfig {
-                accept_language: Some($accept_langauge),
+            Some($crate::TranslationConfig {
+                accept_language: Some($accept_language),
                 ..Default::default()
             }),
         )
     };
-    ($key:expr,accept_langauge:$accept_langauge:expr,args:$args:expr) => {
+    ($key:expr,accept_language:$accept_language:expr,args:$args:expr) => {
         $crate::format_message(
             $key,
-            Some(TranslationConfig {
-                accept_language: Some($accept_langauge),
+            Some($crate::TranslationConfig {
+                accept_language: Some($accept_language),
                 args: Some($args),
                 ..Default::default()
             }),
