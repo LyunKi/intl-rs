@@ -23,7 +23,8 @@ fn i18n_can_format_message_with_args() {
     env::set_var("INTL_RS_RESOURCES", "tests/i18n");
     let key = "hello.somebody";
     assert_eq!(
-        t!(key,accept_language:"zh;q=0.9,en;q=0.8,en;q=1.0",args:HashMap::from([("name","Lyunki")])),
+        t!(key,accept_language:"zh;q=0.9,en;q=0.8,en;q=1.0"
+        ,args:HashMap::from([("name".to_string(),"Lyunki".to_string())])),
         "Hello,Lyunki!"
     );
 }

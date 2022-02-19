@@ -22,10 +22,7 @@ lazy_static! {
     };
 }
 
-pub fn format_message<'a, S: Into<String>>(
-    key: S,
-    config: Option<TranslationConfig<'a>>,
-) -> String {
+pub fn format_message<S: Into<String>>(key: S, config: Option<TranslationConfig>) -> String {
     let key = key.into();
     let TranslationConfig {
         accept_language,
@@ -33,7 +30,7 @@ pub fn format_message<'a, S: Into<String>>(
         args,
     } = config.unwrap_or_default();
     let common_languages = accept_language::intersection(
-        &accept_language.unwrap_or(&I18N.default_language),
+        &accept_language.unwrap_or(I18N.default_language.clone()),
         I18N.supported_languages.iter().map(|s| s as &str).collect(),
     );
     let language = common_languages
@@ -45,12 +42,18 @@ pub fn format_message<'a, S: Into<String>>(
         .split('.')
         .fold(configs, |result: &Value, k| &result[&k])
     {
-        Value::Null => default_message.map(ToString::to_string),
+        Value::Null => default_message,
         message => message.as_str().map(|other_str| other_str.to_string()),
     }
     .unwrap_or(key.to_string());
     let template = Template::new(&template_string);
-    template.render(&args.unwrap_or_default())
+    template.render(
+        &args
+            .unwrap_or_default()
+            .iter()
+            .map(|(a, b)| (a.as_str(), b.as_str()))
+            .collect(),
+    )
 }
 
 #[macro_export]
@@ -62,7 +65,7 @@ macro_rules! t {
         $crate::format_message(
             $key,
             Some($crate::TranslationConfig {
-                accept_language: Some($accept_language),
+                accept_language: Some($accept_language.into()),
                 ..Default::default()
             }),
         )
@@ -71,7 +74,7 @@ macro_rules! t {
         $crate::format_message(
             $key,
             Some($crate::TranslationConfig {
-                accept_language: Some($accept_language),
+                accept_language: Some($accept_language.into()),
                 args: Some($args),
                 ..Default::default()
             }),

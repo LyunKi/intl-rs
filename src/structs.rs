@@ -3,10 +3,10 @@ use std::collections::HashMap;
 use std::fs;
 
 #[derive(Clone, Debug, Default)]
-pub struct TranslationConfig<'a> {
-    pub accept_language: Option<&'a str>,
-    pub default_message: Option<&'a str>,
-    pub args: Option<HashMap<&'a str, &'a str>>,
+pub struct TranslationConfig {
+    pub accept_language: Option<String>,
+    pub default_message: Option<String>,
+    pub args: Option<HashMap<String, String>>,
 }
 
 #[derive(Clone, Debug)]
