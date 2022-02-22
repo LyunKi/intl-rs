@@ -24,14 +24,15 @@ impl I18n {
         let supported_languages: Vec<String> = read_dir
             .filter_map(|entry| {
                 entry.ok().and_then(|dir_entry| {
-                    dir_entry
-                        .path()
-                        //just use the file stem,key of en_US.json is en_US
-                        .file_stem()
-                        .and_then(|file_name| {
-                            file_name
-                                .to_str()
-                                .map(|file_name_str| String::from(file_name_str))
+                    let path = dir_entry.path();
+                    path.extension()
+                        .filter(|ext| ext.to_str() == Some("json"))
+                        .and_then(|_| {
+                            path.file_stem().and_then(|file_name| {
+                                file_name
+                                    .to_str()
+                                    .map(|file_name_str| String::from(file_name_str))
+                            })
                         })
                 })
             })
